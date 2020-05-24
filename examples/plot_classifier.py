@@ -3,7 +3,7 @@
 Plotting Template Classifier
 ============================
 
-An example plot of :class:`kdcrf.template.KDClassifierRF`
+An example plot of :class:`kdcrf.KDClassifierRF`
 """
 import numpy as np
 from matplotlib import pyplot as plt
