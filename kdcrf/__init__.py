@@ -1,4 +1,4 @@
-from ._template import KDClassifierRF
+from ._kdclassifier import KDClassifierRF
 
 from ._version import __version__
 

@@ -1,5 +1,5 @@
 """
-Kernel Density Classification with Random Features
+Class for Kernel Density Classification with Random Features
 """
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
@@ -15,7 +15,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
 
     Parameters
     ----------
-    approx : {'exact', 'rff'}, default='rff'
+    approx : {'exact', 'rff', 'rff+'}, default='rff'
         Algorithm for kernel approximation.
     normalize : bool, default=True
         Whether to normalize the RF transformed vectors. 
@@ -38,7 +38,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
     def __init__(self, approx='rff', normalize=True,
                  gamma=1., n_components=100, 
                  random_state=None):
-        assert approx in ['rff', 'exact']
+        assert approx in ['rff+','rff', 'exact']
         self.approx = approx
         self.normalize = normalize
         self.gamma = gamma
@@ -68,7 +68,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         if self.approx == 'exact':
             for label in self.classes_:
                 self.Xtrain_[label] =  X[y == label]   
-        elif self.approx == 'rff':
+        elif self.approx == 'rff' or self.approx == 'rff+':
             self.rbf_sampler_ = RBFSampler(self.gamma, self.n_components, self.random_state)
             Xt = self.rbf_sampler_.fit_transform(X)
             if self.normalize == True:
@@ -125,14 +125,15 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         if self.approx == 'exact':
             for label in self.classes_:
                 K[label] = rbf_kernel(X, self.Xtrain_[label], gamma=self.gamma)
-        elif self.approx == 'rff':
+        elif self.approx == 'rff' or self.approx == 'rff+':
             Xt = self.rbf_sampler_.transform(X)
             if self.normalize == True:
                 norms = np.linalg.norm(Xt, axis=1)
                 Xt = Xt / norms[:, np.newaxis]
             for label in self.classes_:
                 K[label] = np.matmul(Xt, self.Xtrain_[label].T)
-                # K[label] = np.abs(K[label])
+                if self.approx == 'rff+':
+                    K[label] = np.abs(K[label])
         else:
             raise Exception(f"Invalid approximation method:{self.approx}")
         sums = np.stack([np.sum(K[label], axis=1) for label in self.classes_], axis=1)

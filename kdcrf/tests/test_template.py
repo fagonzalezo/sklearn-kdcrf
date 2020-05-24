@@ -5,7 +5,7 @@ from sklearn.datasets import load_iris
 from numpy.testing import assert_array_equal
 from numpy.testing import assert_allclose
 
-from .._template import KDClassifierRF
+from .._kdclassifier import KDClassifierRF
 
 
 @pytest.fixture

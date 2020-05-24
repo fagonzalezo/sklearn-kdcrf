@@ -2,7 +2,7 @@ import pytest
 
 from sklearn.utils.estimator_checks import check_estimator
 
-from .._template import KDClassifierRF
+from .._kdclassifier import KDClassifierRF
 
 @pytest.mark.parametrize(
     "Estimator", [KDClassifierRF]
