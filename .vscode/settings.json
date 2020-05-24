@@ -1,0 +1,18 @@
+{
+    "python.testing.pytestArgs": [
+        "kdcrf"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "spellright.language": [
+        "en"
+    ],
+    "spellright.documentTypes": [
+        "markdown",
+        "latex"
+    ],
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH" : "${workspaceFolder}:PYTHONPATH}"
+    }
+}
