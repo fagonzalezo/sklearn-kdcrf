@@ -77,16 +77,14 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
             if self.normalize:
                 norms = np.linalg.norm(Xt, axis=1)
                 Xt = Xt / norms[:, np.newaxis]
-
-            if self.approx == 'lrff' or self.approx == 'lrff+':
-                self.rff_mean = np.zeros((self.classes_.shape[0], self.n_components))
-
-            for label in self.classes_:
-                self.Xtrain_[label] = Xt[y == label]
+            if self.approx in ['rff', 'rff+']:
+                for label in self.classes_:
+                    self.Xtrain_[label] = Xt[y == label]
+            else:
+                self.rff_mean = {}
                 # mean calculation of rff for each class
-                if self.approx == 'lrff' or self.approx == 'lrff+':
-                    self.rff_mean[label] = np.mean(self.Xtrain_[label], axis=0)
-
+                for label in self.classes_:
+                    self.rff_mean[label] = np.mean(Xt[y == label], axis=0)
         else:
             raise Exception(f"Invalid approximation method:{self.approx}")
 
@@ -147,11 +145,13 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
                 if self.approx == 'lrff' or self.approx == 'lrff+':
                     K[label] = np.matmul(Xt, self.rff_mean[label].T)
                 if self.approx == 'rff+' or self.approx == 'lrff+':
-                    K[label] = np.abs(K[label])
+                    #K[label] = np.abs(K[label])
+                    K[label] = np.maximum(K[label], 0)
         else:
             raise Exception(f"Invalid approximation method:{self.approx}")
         if self.approx == 'lrff' or self.approx == 'lrff+':
             probs = np.stack([K[label] for label in self.classes_], axis=1)
+            probs = probs / np.sum(probs, axis=1)[:, np.newaxis]
         else:
             sums = np.stack([np.sum(K[label], axis=1) for label in self.classes_], axis=1)
             probs = sums / np.sum(sums, axis=1)[:, np.newaxis]
