@@ -1,21 +1,21 @@
 .. -*- mode: rst -*-
 
-|Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_
+.. c |Travis|_ |AppVeyor|_ |Codecov|_ |CircleCI|_ |ReadTheDocs|_
 
-.. |Travis| image:: https://travis-ci.org/scikit-learn-contrib/project-template.svg?branch=master
-.. _Travis: https://travis-ci.org/scikit-learn-contrib/project-template
+.. c |Travis| image:: https://travis-ci.org/scikit-learn-contrib/project-template.svg?branch=master
+.. c _Travis: https://travis-ci.org/scikit-learn-contrib/project-template
 
-.. |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/coy2qqaqr1rnnt5y/branch/master?svg=true
-.. _AppVeyor: https://ci.appveyor.com/project/glemaitre/project-template
+.. c |AppVeyor| image:: https://ci.appveyor.com/api/projects/status/coy2qqaqr1rnnt5y/branch/master?svg=true
+.. c _AppVeyor: https://ci.appveyor.com/project/glemaitre/project-template
 
-.. |Codecov| image:: https://codecov.io/gh/scikit-learn-contrib/project-template/branch/master/graph/badge.svg
-.. _Codecov: https://codecov.io/gh/scikit-learn-contrib/project-template
+.. c |Codecov| image:: https://codecov.io/gh/scikit-learn-contrib/project-template/branch/master/graph/badge.svg
+.. c _Codecov: https://codecov.io/gh/scikit-learn-contrib/project-template
 
-.. |CircleCI| image:: https://circleci.com/gh/scikit-learn-contrib/project-template.svg?style=shield&circle-token=:circle-token
-.. _CircleCI: https://circleci.com/gh/scikit-learn-contrib/project-template/tree/master
+.. c |CircleCI| image:: https://circleci.com/gh/scikit-learn-contrib/project-template.svg?style=shield&circle-token=:circle-token
+.. c _CircleCI: https://circleci.com/gh/scikit-learn-contrib/project-template/tree/master
 
-.. |ReadTheDocs| image:: https://readthedocs.org/projects/sklearn-kdcrf/badge/?version=latest
-.. _ReadTheDocs: https://sklearn-kdcrf.readthedocs.io/en/latest/?badge=latest
+.. c |ReadTheDocs| image:: https://readthedocs.org/projects/sklearn-kdcrf/badge/?version=latest
+.. c _ReadTheDocs: https://sklearn-kdcrf.readthedocs.io/en/latest/?badge=latest
 
 Kernel Density Classification with Random Features
 ============================================================

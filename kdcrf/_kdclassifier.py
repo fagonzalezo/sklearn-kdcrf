@@ -8,6 +8,7 @@ from sklearn.utils.multiclass import unique_labels
 from sklearn.kernel_approximation import RBFSampler
 from sklearn.metrics.pairwise import rbf_kernel
 
+
 class KDClassifierRF(ClassifierMixin, BaseEstimator):
     """ Kernel Density Classification with Random Features
 
@@ -35,8 +36,9 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
     classes_ : ndarray, shape (n_classes,)
         The classes seen at :meth:`fit`.
     """
+
     def __init__(self, approx='rff', normalize=True,
-                 gamma=1., n_components=100, 
+                 gamma=1., n_components=100,
                  random_state=None):
         assert approx in ['rff+','rff', 'lrff', 'lrff+', 'orf', 'lorf', 'exact']
         self.approx = approx
@@ -65,17 +67,26 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         # Store the classes seen during fit
         self.classes_ = unique_labels(y)
         self.Xtrain_ = {}
+
         if self.approx == 'exact':
             for label in self.classes_:
-                self.Xtrain_[label] =  X[y == label]   
-        elif self.approx == 'rff' or self.approx == 'rff+':
+                self.Xtrain_[label] = X[y == label]
+        elif self.approx in ['rff', 'rff+', 'lrff', 'lrff+']:
             self.rbf_sampler_ = RBFSampler(self.gamma, self.n_components, self.random_state)
             Xt = self.rbf_sampler_.fit_transform(X)
-            if self.normalize == True:
+            if self.normalize:
                 norms = np.linalg.norm(Xt, axis=1)
                 Xt = Xt / norms[:, np.newaxis]
+
+            if self.approx == 'lrff' or self.approx == 'lrff+':
+                self.rff_mean = np.zeros((self.classes_.shape[0], self.n_components))
+
             for label in self.classes_:
-                self.Xtrain_[label] =  Xt[y == label]
+                self.Xtrain_[label] = Xt[y == label]
+                # mean calculation of rff for each class
+                if self.approx == 'lrff' or self.approx == 'lrff+':
+                    self.rff_mean[label] = np.mean(self.Xtrain_[label], axis=0)
+
         else:
             raise Exception(f"Invalid approximation method:{self.approx}")
 
@@ -125,19 +136,25 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         if self.approx == 'exact':
             for label in self.classes_:
                 K[label] = rbf_kernel(X, self.Xtrain_[label], gamma=self.gamma)
-        elif self.approx == 'rff' or self.approx == 'rff+':
+        elif self.approx in ['rff', 'rff+', 'lrff', 'lrff+']:
             Xt = self.rbf_sampler_.transform(X)
             if self.normalize == True:
                 norms = np.linalg.norm(Xt, axis=1)
                 Xt = Xt / norms[:, np.newaxis]
             for label in self.classes_:
-                K[label] = np.matmul(Xt, self.Xtrain_[label].T)
-                if self.approx == 'rff+':
+                if self.approx == 'rff' or self.approx == 'rff+':
+                    K[label] = np.matmul(Xt, self.Xtrain_[label].T)
+                if self.approx == 'lrff' or self.approx == 'lrff+':
+                    K[label] = np.matmul(Xt, self.rff_mean[label].T)
+                if self.approx == 'rff+' or self.approx == 'lrff+':
                     K[label] = np.abs(K[label])
         else:
             raise Exception(f"Invalid approximation method:{self.approx}")
-        sums = np.stack([np.sum(K[label], axis=1) for label in self.classes_], axis=1)
-        probs = sums / np.sum(sums, axis=1)[:, np.newaxis]
+        if self.approx == 'lrff' or self.approx == 'lrff+':
+            probs = np.stack([K[label] for label in self.classes_], axis=1)
+        else:
+            sums = np.stack([np.sum(K[label], axis=1) for label in self.classes_], axis=1)
+            probs = sums / np.sum(sums, axis=1)[:, np.newaxis]
         return probs
 
 
@@ -155,6 +172,7 @@ class KDEstimatorRF(BaseEstimator):
     Examples
     --------
     """
+
     def __init__(self, demo_param='demo_param'):
         self.demo_param = demo_param
 
@@ -213,6 +231,7 @@ class TemplateTransformer(TransformerMixin, BaseEstimator):
     n_features_ : int
         The number of features of the data passed to :meth:`fit`.
     """
+
     def __init__(self, demo_param='demo'):
         self.demo_param = demo_param
 
