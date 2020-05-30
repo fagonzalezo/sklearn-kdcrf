@@ -38,7 +38,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
     def __init__(self, approx='rff', normalize=True,
                  gamma=1., n_components=100, 
                  random_state=None):
-        assert approx in ['rff+','rff', 'exact']
+        assert approx in ['rff+','rff', 'lrff', 'lrff+', 'orf', 'lorf', 'exact']
         self.approx = approx
         self.normalize = normalize
         self.gamma = gamma
