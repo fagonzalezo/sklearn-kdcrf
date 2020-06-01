@@ -12,14 +12,14 @@ with open(ver_file) as f:
     exec(f.read())
 
 DISTNAME = 'sklearn-kdcrf'
-DESCRIPTION = 'A template for scikit-learn compatible packages.'
+DESCRIPTION = 'Classifier based on Kernel Density Estimation using Random Features.'
 with codecs.open('README.rst', encoding='utf-8-sig') as f:
     LONG_DESCRIPTION = f.read()
-MAINTAINER = 'V. Birodkars, G. Lemaitre'
+MAINTAINER = 'F. González, A. Gallego'
 MAINTAINER_EMAIL = 'vighneshbirodkar@nyu.edu, g.lemaitre58@gmail.com'
-URL = 'https://github.com/scikit-learn-contrib/project-template'
+URL = 'https://github.com/fagonzalezo/sklearn-kdcrf'
 LICENSE = 'new BSD'
-DOWNLOAD_URL = 'https://github.com/scikit-learn-contrib/project-template'
+DOWNLOAD_URL = 'https://github.com/fagonzalezo/sklearn-kdcrf'
 VERSION = __version__
 INSTALL_REQUIRES = ['numpy', 'scipy', 'scikit-learn']
 CLASSIFIERS = ['Intended Audience :: Science/Research',

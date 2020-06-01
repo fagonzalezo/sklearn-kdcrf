@@ -21,10 +21,12 @@ def test_KDClassifierRF(data):
     assert hasattr(clf, 'gamma')
     assert hasattr(clf, 'n_components')
 
-    clf.fit(X, y)
-    assert hasattr(clf, 'classes_')
-    assert hasattr(clf, 'Xtrain_')
-    if clf.approx == 'rff':
-        assert hasattr(clf, 'rbf_sampler_')
-    y_pred = clf.predict(X)
-    assert y_pred.shape == (X.shape[0],)
+    for approx in ['rff+','rff', 'lrff', 'lrff+', 'exact']:
+        clf = KDClassifierRF(approx=approx)
+        clf.fit(X, y)
+        assert hasattr(clf, 'classes_')
+        assert hasattr(clf, 'Xtrain_')
+        if clf.approx != 'exact':
+            assert hasattr(clf, 'rbf_sampler_')
+        y_pred = clf.predict(X)
+        assert y_pred.shape == (X.shape[0],)
