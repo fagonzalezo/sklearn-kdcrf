@@ -4,7 +4,7 @@ Class for RBF Sampler with Orthogonal Random Features
 import warnings
 
 import numpy as np
-import scipy.sparse as sp
+import scipy.stats as stats
 from scipy.linalg import svd
 
 from sklearn.base import BaseEstimator
@@ -16,7 +16,7 @@ from sklearn.metrics.pairwise import pairwise_kernels, KERNEL_PARAMS
 from sklearn.utils.validation import check_non_negative, _deprecate_positional_args
 
 
-class RBFSampler(TransformerMixin, BaseEstimator):
+class RBFSamplerORF(TransformerMixin, BaseEstimator):
     """Approximates feature map of an RBF kernel by Orthogonal Random Features
     of its Fourier transform.
 
@@ -57,7 +57,7 @@ class RBFSampler(TransformerMixin, BaseEstimator):
     >>> from sklearn.linear_model import SGDClassifier
     >>> X = [[0, 0], [1, 1], [1, 0], [0, 1]]
     >>> y = [0, 0, 1, 1]
-    >>> rbf_feature = RBFSampler(gamma=1, random_state=1)
+    >>> rbf_feature = RBFSamplerORF(gamma=1, random_state=1)
     >>> X_features = rbf_feature.fit_transform(X)
     >>> clf = SGDClassifier(max_iter=5, tol=1e-3)
     >>> clf.fit(X_features, y)
@@ -95,15 +95,26 @@ class RBFSampler(TransformerMixin, BaseEstimator):
             Returns the transformer.
         """
 
-        # X = self._validate_data(X, accept_sparse='csr')
-        # random_state = check_random_state(self.random_state)
-        # n_features = X.shape[1]
-        #
-        # self.random_weights_ = (np.sqrt(2 * self.gamma) * random_state.normal(
-        #     size=(n_features, self.n_components)))
-        #
-        # self.random_offset_ = random_state.uniform(0, 2 * np.pi,
-        #                                            size=self.n_components)
+        X = self._validate_data(X, accept_sparse='csr')
+        random_state = check_random_state(self.random_state)
+        n_features = X.shape[1]
+
+        stack_random_weights = []
+        for i in range(round(self.n_components / n_features)):
+            random_gaussian_weights_ = random_state.normal(size=(n_features, n_features))
+            q, _ = np.linalg.qr(random_gaussian_weights_, mode='reduced')
+            #random_chi_weights = np.random.chisquare(df=n_features, size=(n_features))
+            #random_chi_weights = np.sqrt(random_chi_weights)
+
+            random_chi_weights = stats.chi.rvs(df = n_features, size=(n_features))
+            random_chi_weights = np.diag(random_chi_weights)
+
+            random_weights_ = random_chi_weights * q
+            stack_random_weights.append(random_weights_)
+
+        self.random_weights_ = np.sqrt(2 * self.gamma) * np.hstack(stack_random_weights)[:n_features, :self.n_components]
+        self.random_offset_ = random_state.uniform(0, 2 * np.pi, size=self.n_components)
+
         return self
 
     def transform(self, X):
@@ -119,11 +130,11 @@ class RBFSampler(TransformerMixin, BaseEstimator):
         -------
         X_new : array-like, shape (n_samples, n_components)
         """
-        # check_is_fitted(self)
-        #
-        # X = check_array(X, accept_sparse='csr')
-        # projection = safe_sparse_dot(X, self.random_weights_)
-        # projection += self.random_offset_
-        # np.cos(projection, projection)
-        # projection *= np.sqrt(2.) / np.sqrt(self.n_components)
+        check_is_fitted(self)
+
+        X = check_array(X, accept_sparse='csr')
+        projection = safe_sparse_dot(X, self.random_weights_)
+        projection += self.random_offset_
+        np.cos(projection, projection)
+        projection *= np.sqrt(2.) / np.sqrt(self.n_components)
         return projection
