@@ -100,16 +100,15 @@ class RBFSamplerORF(TransformerMixin, BaseEstimator):
         n_features = X.shape[1]
 
         stack_random_weights = []
-        for i in range(round(self.n_components / n_features)):
+        for i in range(round(self.n_components / n_features)+1):
             random_gaussian_weights_ = random_state.normal(size=(n_features, n_features))
             q, _ = np.linalg.qr(random_gaussian_weights_, mode='reduced')
-            #random_chi_weights = np.random.chisquare(df=n_features, size=(n_features))
-            #random_chi_weights = np.sqrt(random_chi_weights)
+            random_chi_weights = np.random.chisquare(df=n_features, size=(n_features))
+            random_chi_weights = np.sqrt(random_chi_weights)
 
-            random_chi_weights = stats.chi.rvs(df = n_features, size=(n_features))
             random_chi_weights = np.diag(random_chi_weights)
 
-            random_weights_ = random_chi_weights * q
+            random_weights_ = np.dot(random_chi_weights, q)
             stack_random_weights.append(random_weights_)
 
         self.random_weights_ = np.sqrt(2 * self.gamma) * np.hstack(stack_random_weights)[:n_features, :self.n_components]

@@ -70,7 +70,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         self : object
             Estimator instance.
         """
-        super().set_params()
+        super().set_params(**params)
 
         if self.approx in ['rff', 'rff+', 'lrff', 'lrff+']:
             for param in ["gamma", "n_components", "random_state"]:
