@@ -40,13 +40,13 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
     def __init__(self, approx='rff', normalize=True,
                  gamma=1., n_components=100,
                  random_state=None, sampler=None):
-        assert approx in ['rff+', 'rff', 'lrff', 'lrff+', 'orf', 'lorf', 'exact']
+        assert approx in ['rff+', 'rff', 'lrff', 'lrff+', 'dmrff', 'orf', 'lorf', 'exact']
         self.approx = approx
         self.normalize = normalize
         self.gamma = gamma
         self.n_components = n_components
         self.random_state = random_state
-        if self.approx in ['rff', 'rff+', 'lrff', 'lrff+'] and sampler is None:
+        if self.approx in ['rff', 'rff+', 'lrff', 'lrff+', 'dmrff'] and sampler is None:
             self.rbf_sampler_ = RBFSampler(gamma=self.gamma, n_components=self.n_components, random_state=self.random_state)
         else:
             self.rbf_sampler_ = sampler
@@ -72,7 +72,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         """
         super().set_params(**params)
 
-        if self.approx in ['rff', 'rff+', 'lrff', 'lrff+']:
+        if self.approx in ['rff', 'rff+', 'lrff', 'lrff+','dmrff']:
             for param in ["gamma", "n_components", "random_state"]:
                 if param in params.keys():
                     self.rbf_sampler_.set_params(**{param: params[param]})
@@ -103,7 +103,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         if self.approx == 'exact':
             for label in self.classes_:
                 self.Xtrain_[label] = X[y == label]
-        elif self.approx in ['rff', 'rff+', 'lrff', 'lrff+']:
+        elif self.approx in ['rff', 'rff+', 'lrff', 'lrff+', 'dmrff']:
             Xt = self.rbf_sampler_.fit_transform(X)
             if self.normalize:
                 norms = np.linalg.norm(Xt, axis=1)
@@ -111,6 +111,11 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
             if self.approx in ['rff', 'rff+']:
                 for label in self.classes_:
                     self.Xtrain_[label] = Xt[y == label]
+            elif self.approx == 'dmrff':
+                self.rff_mean = {}
+                for label in self.classes_:
+                    self.rff_mean[label] = np.einsum('...i, ...j->ij', Xt[y == label], 
+                                                     np.conj(Xt[y == label]), optimize='optimal') 
             else:
                 self.rff_mean = {}
                 # mean calculation of rff for each class
@@ -165,7 +170,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         if self.approx == 'exact':
             for label in self.classes_:
                 K[label] = rbf_kernel(X, self.Xtrain_[label], gamma=self.gamma)
-        elif self.approx in ['rff', 'rff+', 'lrff', 'lrff+']:
+        elif self.approx in ['rff', 'rff+', 'lrff', 'lrff+', 'dmrff']:
             Xt = self.rbf_sampler_.transform(X)
             if self.normalize == True:
                 norms = np.linalg.norm(Xt, axis=1)
@@ -177,10 +182,12 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
                     K[label] = np.matmul(Xt, self.rff_mean[label].T)
                 if self.approx == 'rff+' or self.approx == 'lrff+':
                     # K[label] = np.abs(K[label])
-                    K[label] = np.maximum(K[label], 0)
+                    K[label] = np.maximum(K[label], 0.0000001)
+                if self.approx == 'dmrff':
+                    K[label] = np.einsum('...i,ij,...j',Xt, self.rff_mean[label], Xt)
         else:
             raise Exception(f"Invalid approximation method:{self.approx}")
-        if self.approx == 'lrff' or self.approx == 'lrff+':
+        if self.approx in ['lrff', 'lrff+', 'dmrff']:
             sums = np.stack([K[label] for label in self.classes_], axis=1)
             probs = sums / np.sum(sums, axis=1)[:, np.newaxis]
         else:

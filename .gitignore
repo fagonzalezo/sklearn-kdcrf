@@ -68,3 +68,4 @@ target/
 
 # VS Code Python extension
 .env
+examples/letter-recognition.data

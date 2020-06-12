@@ -95,7 +95,7 @@ class RBFSamplerORF(TransformerMixin, BaseEstimator):
             Returns the transformer.
         """
 
-        X = self._validate_data(X, accept_sparse='csr')
+        #X = self._validate_data(X, accept_sparse='csr')
         random_state = check_random_state(self.random_state)
         n_features = X.shape[1]
 
