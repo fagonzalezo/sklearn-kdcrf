@@ -2,6 +2,7 @@
 Class for Kernel Density Classification with Random Features
 """
 import numpy as np
+import scipy
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels
@@ -114,8 +115,13 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
             elif self.approx == 'dmrff':
                 self.rff_mean = {}
                 for label in self.classes_:
-                    self.rff_mean[label] = np.einsum('...i, ...j->ij', Xt[y == label], 
-                                                     np.conj(Xt[y == label]), optimize='optimal') 
+                    dm = np.einsum('...i, ...j->ij', Xt[y == label], 
+                                   np.conj(Xt[y == label]), optimize='optimal')
+                    w, v = np.linalg.eig(dm)
+                    # self.rff_mean[label] = np.linalg.cholesky(dmp)
+                    wp = w[w>0]
+                    num_p = wp.shape[0]
+                    self.rff_mean[label] = np.matmul(v[:, :num_p],np.diag(np.sqrt(wp)))
             else:
                 self.rff_mean = {}
                 # mean calculation of rff for each class
@@ -184,7 +190,9 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
                     # K[label] = np.abs(K[label])
                     K[label] = np.maximum(K[label], 0.0000001)
                 if self.approx == 'dmrff':
-                    K[label] = np.einsum('...i,ij,...j',Xt, self.rff_mean[label], Xt)
+                    proj = np.matmul(Xt, self.rff_mean[label])
+                    #K[label] = np.einsum('...i,...i', proj, np.conj(proj))
+                    K[label] = np.linalg.norm(proj, axis=1) ** 2
         else:
             raise Exception(f"Invalid approximation method:{self.approx}")
         if self.approx in ['lrff', 'lrff+', 'dmrff']:
