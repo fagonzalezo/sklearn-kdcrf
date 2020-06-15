@@ -7,6 +7,7 @@ from numpy.testing import assert_allclose
 
 from .._kdclassifier import KDClassifierRF
 from .._RBFSamplerORF import RBFSamplerORF
+from .._RBFSamplerSORF import RBFSamplerSORF
 
 
 @pytest.fixture
@@ -38,7 +39,21 @@ def test_KDClassifierORF(data):
     X, y = data
 
     for approx in ['rff+','rff', 'lrff', 'lrff+', 'exact']:
-        clf = KDClassifierRF(approx=approx, sampler=RBFSamplerORF)
+        clf = KDClassifierRF(approx=approx, sampler=RBFSamplerORF())
+        clf.fit(X, y)
+        assert hasattr(clf, 'classes_')
+        assert hasattr(clf, 'Xtrain_')
+        if clf.approx != 'exact':
+            assert hasattr(clf, 'rbf_sampler_')
+        y_pred = clf.predict(X)
+        assert y_pred.shape == (X.shape[0],)
+
+
+def test_KDClassifierSORF(data):
+    X, y = data
+
+    for approx in ['rff+','rff', 'lrff', 'lrff+', 'exact']:
+        clf = KDClassifierRF(approx=approx, sampler=RBFSamplerSORF())
         clf.fit(X, y)
         assert hasattr(clf, 'classes_')
         assert hasattr(clf, 'Xtrain_')
