@@ -47,10 +47,8 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         self.gamma = gamma
         self.n_components = n_components
         self.random_state = random_state
-        if self.approx in ['rff', 'rff+', 'lrff', 'lrff+', 'dmrff'] and sampler is None:
-            self.rbf_sampler_ = RBFSampler(gamma=self.gamma, n_components=self.n_components, random_state=self.random_state)
-        else:
-            self.rbf_sampler_ = sampler
+        self.rbf_sampler_ = sampler
+
 
     def set_params(self, **params):
         """
@@ -72,13 +70,18 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
             Estimator instance.
         """
         super().set_params(**params)
-
+        # Check if sampler is defined
+        self.check_if_sampler_is_defined()
         if self.approx in ['rff', 'rff+', 'lrff', 'lrff+','dmrff']:
             for param in ["gamma", "n_components", "random_state"]:
                 if param in params.keys():
                     self.rbf_sampler_.set_params(**{param: params[param]})
 
         return self
+
+    def check_if_sampler_is_defined(self):
+        if self.approx in ['rff', 'rff+', 'lrff', 'lrff+', 'dmrff'] and self.rbf_sampler_ is None:
+            self.rbf_sampler_ = RBFSampler(gamma=self.gamma, n_components=self.n_components, random_state=self.random_state)
 
     def fit(self, X, y):
         """Fits the classifier.
@@ -97,6 +100,10 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         """
         # Check that X and y have correct shape
         X, y = check_X_y(X, y)
+
+        # Check if sampler is defined
+        self.check_if_sampler_is_defined()
+
         # Store the classes seen during fit
         self.classes_ = unique_labels(y)
         self.Xtrain_ = {}
