@@ -117,11 +117,11 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
                 for label in self.classes_:
                     dm = np.einsum('...i, ...j->ij', Xt[y == label], 
                                    np.conj(Xt[y == label]), optimize='optimal')
-                    w, v = np.linalg.eig(dm)
+                    w, v = np.linalg.eigh(dm)
                     # self.rff_mean[label] = np.linalg.cholesky(dmp)
                     wp = w[w>0]
                     num_p = wp.shape[0]
-                    self.rff_mean[label] = np.matmul(v[:, :num_p],np.diag(np.sqrt(wp)))
+                    self.rff_mean[label] = np.matmul(v[:, -num_p:],np.diag(np.sqrt(wp)))
             else:
                 self.rff_mean = {}
                 # mean calculation of rff for each class
