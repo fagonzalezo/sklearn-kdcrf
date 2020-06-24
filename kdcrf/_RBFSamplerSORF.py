@@ -108,20 +108,8 @@ class RBFSamplerSORF(TransformerMixin, BaseEstimator):
         random_state = check_random_state(self.random_state)
         n_features = X.shape[1]
 
-        # order_matrix = int(n_features if n_features == 1 or n_features == 2 else np.power(2, np.floor(np.log2(n_features-1))+1))
-        # stack_random_weights = []
-        # for j in range(round(self.n_components / n_features)+1):
-        #     fwht_matrix = np.ones(shape=(order_matrix, order_matrix))
-        #     for i in range(0, self.n_blocks):
-        #         D = np.random.choice(a=(-1, 1), size=order_matrix, replace=True)
-        #         D_diag = np.diag(D)
-        #         if i == 0:
-        #             fwht_matrix = self.fwht(D_diag)
-        #         else:
-        #             fwht_matrix = np.dot(fwht_matrix, self.fwht(D_diag))
-        #     stack_random_weights.append(fwht_matrix)
-
-        order_matrix = int(n_features if n_features == 1 or n_features == 2 else np.power(2, np.floor(np.log2(n_features - 1)) + 1))
+        order_matrix = int(n_features if n_features == 1 or n_features == 2
+                           else np.power(2, np.floor(np.log2(n_features - 1)) + 1))
         S_matrix = hadamard(n=order_matrix)
         stack_random_weights = []
         for j in range(round(self.n_components / n_features) + 1):
@@ -133,10 +121,11 @@ class RBFSamplerSORF(TransformerMixin, BaseEstimator):
                 if i == 0:
                     random_weights_ = np.dot(S_matrix, D_diag)
                 else:
-                    random_weights_ = np.dot(random_weights_, np.dot(S_matrix, D_diag))
+                    random_weights_ = np.dot( np.dot(S_matrix, D_diag), random_weights_)
             stack_random_weights.append(random_weights_)
 
-        self.random_weights_ = np.sqrt(n_features) * np.sqrt(2 * self.gamma) * np.hstack(stack_random_weights)[:n_features, :self.n_components]
+        self.random_weights_ = np.sqrt(n_features) * np.sqrt(2 * self.gamma) * \
+                               np.hstack(stack_random_weights)[:n_features, :self.n_components]
         self.random_offset_ = random_state.uniform(0, 2 * np.pi, size=self.n_components)
 
         return self
