@@ -40,7 +40,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
 
     def __init__(self, approx='rff', normalize=True,
                  gamma=1., n_components=100,
-                 random_state=None, sampler=None):
+                 random_state=None, sampler=None, square_dot=False):
         assert approx in ['rff+', 'rff', 'lrff', 'lrff+', 'dmrff', 'orf', 'lorf', 'exact']
         self.approx = approx
         self.normalize = normalize
@@ -48,7 +48,7 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
         self.n_components = n_components
         self.random_state = random_state
         self.rbf_sampler_ = sampler
-
+        self.square_dot = square_dot
 
     def set_params(self, **params):
         """
@@ -191,8 +191,11 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
             for label in self.classes_:
                 if self.approx == 'rff' or self.approx == 'rff+':
                     K[label] = np.matmul(Xt, self.Xtrain_[label].T)
+
                 if self.approx == 'lrff' or self.approx == 'lrff+':
                     K[label] = np.matmul(Xt, self.rff_mean[label].T)
+                if self.approx in ('rff', 'rff+', 'lrff', 'lrff+') and self.square_dot:
+                    K[label] = np.power(K[label], 2)
                 if self.approx == 'rff+' or self.approx == 'lrff+':
                     # K[label] = np.abs(K[label])
                     K[label] = np.maximum(K[label], 0.0000001)
@@ -204,9 +207,11 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
             raise Exception(f"Invalid approximation method:{self.approx}")
         if self.approx in ['lrff', 'lrff+', 'dmrff']:
             sums = np.stack([K[label] for label in self.classes_], axis=1)
+            sums = sums - sums.min() if sums.min()<0 else sums
             probs = sums / np.sum(sums, axis=1)[:, np.newaxis]
         else:
             sums = np.stack([np.sum(K[label], axis=1) for label in self.classes_], axis=1)
+            sums = sums - sums.min() if sums.min()<0 else sums
             probs = sums / np.sum(sums, axis=1)[:, np.newaxis]
         return probs
 
