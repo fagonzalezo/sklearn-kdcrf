@@ -205,14 +205,15 @@ class KDClassifierRF(ClassifierMixin, BaseEstimator):
                     K[label] = np.linalg.norm(proj, axis=1) ** 2
         else:
             raise Exception(f"Invalid approximation method:{self.approx}")
+        eps = 0.00001
         if self.approx in ['lrff', 'lrff+', 'dmrff']:
             sums = np.stack([K[label] for label in self.classes_], axis=1)
             sums = sums - sums.min() if sums.min()<0 else sums
-            probs = sums / np.sum(sums, axis=1)[:, np.newaxis]
+            probs = sums / (np.sum(sums, axis=1)+eps)[:, np.newaxis]
         else:
             sums = np.stack([np.sum(K[label], axis=1) for label in self.classes_], axis=1)
             sums = sums - sums.min() if sums.min()<0 else sums
-            probs = sums / np.sum(sums, axis=1)[:, np.newaxis]
+            probs = sums / (np.sum(sums, axis=1)+eps)[:, np.newaxis]
         return probs
 
 
